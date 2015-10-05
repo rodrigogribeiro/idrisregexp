@@ -60,3 +60,6 @@ hasEmptyDec (Cat l r) with (hasEmptyDec l)
                                      | No nprf' = No (nprf' . snd . hasEmptyCatInv)
                       | No nprf = No (nprf . fst . hasEmptyCatInv)               
 hasEmptyDec (Star e) = Yes (HasStar e)
+
+
+deriv : (e : RegExp) -> 
