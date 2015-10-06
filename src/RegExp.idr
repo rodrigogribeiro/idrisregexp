@@ -218,3 +218,62 @@ catOptSound (Star x) (Chr y) xs pr = pr
 catOptSound (Star x) (Cat y z) xs pr = pr
 catOptSound (Star x) (Alt y z) xs pr = pr
 catOptSound (Star x) (Star y) xs pr = pr
+
+
+catOptComplete : (l : RegExp) ->
+                 (r : RegExp) ->
+                 (xs : List Char) ->
+                 InRegExp xs (Cat l r) ->
+                 InRegExp xs (l .@. r)
+catOptComplete Zero r xs (InCat x y prf) = void (inZeroInv x)
+catOptComplete Eps r xs (InCat InEps y Refl) = y
+catOptComplete (Chr x) Zero xs (InCat y z prf) = void (inZeroInv z)
+catOptComplete (Chr x) Eps xs (InCat y InEps prf) = ?rhs_2
+catOptComplete (Chr x) (Chr y) xs pr = pr
+catOptComplete (Chr x) (Cat y z) xs pr = pr
+catOptComplete (Chr x) (Alt y z) xs pr = pr
+catOptComplete (Chr x) (Star y) xs pr = pr
+catOptComplete (Cat x y) Zero xs (InCat z w prf) = void (inZeroInv w)
+catOptComplete (Cat x y) Eps xs pr = ?rhs_5
+catOptComplete (Cat x y) (Chr z) xs pr = pr
+catOptComplete (Cat x y) (Cat z w) xs pr = pr
+catOptComplete (Cat x y) (Alt z w) xs pr = pr
+catOptComplete (Cat x y) (Star z) xs pr = pr
+catOptComplete (Alt x y) Zero xs (InCat z w prf) = void (inZeroInv w)
+catOptComplete (Alt x y) Eps xs pr = ?rhs_6
+catOptComplete (Alt x y) (Chr z) xs pr = pr
+catOptComplete (Alt x y) (Cat z w) xs pr = pr
+catOptComplete (Alt x y) (Alt z w) xs pr = pr
+catOptComplete (Alt x y) (Star z) xs pr = pr
+catOptComplete (Star x) Zero xs (InCat y z prf) = void (inZeroInv z)
+catOptComplete (Star x) Eps xs pr = ?rhs_7
+catOptComplete (Star x) (Chr y) xs pr = pr
+catOptComplete (Star x) (Cat y z) xs pr = pr
+catOptComplete (Star x) (Alt y z) xs pr = pr
+catOptComplete (Star x) (Star y) xs pr = pr                 
+
+starOptSound : (l : RegExp) ->
+               (xs : List Char) ->
+               InRegExp xs (star l) ->
+               InRegExp xs (Star l)
+starOptSound Zero xs pr = InStar (InAltL pr)
+starOptSound Eps xs pr = InStar (InAltL pr)
+starOptSound (Chr x) xs pr = pr
+starOptSound (Cat x y) xs pr = pr
+starOptSound (Alt x y) xs pr = pr
+starOptSound (Star x) xs pr = pr               
+
+starOptComplete : (l : RegExp) ->
+                  (xs : List Char) -> 
+                  InRegExp xs (Star l) -> 
+                  InRegExp xs (star l)
+starOptComplete Zero xs (InStar (InAltL x)) = x
+starOptComplete Zero xs (InStar (InAltR (InCat x y prf))) = void (inZeroInv x)
+starOptComplete Eps xs (InStar x) = ?rhs_13
+starOptComplete (Chr x) xs pr = ?rhs_9
+starOptComplete (Cat x y) xs pr = ?rhs_10
+starOptComplete (Alt x y) xs pr = ?rhs_11
+starOptComplete (Star x) xs pr = ?rhs_12                  
+
+test : String -> String
+test s = ?rhs_4
