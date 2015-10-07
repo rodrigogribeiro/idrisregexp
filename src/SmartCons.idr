@@ -2,6 +2,8 @@ module SmartCons
 
 import RegExp
 
+%default total
+
 appendNilR : (xs : List a) -> xs = xs ++ []
 appendNilR [] = Refl
 appendNilR (x :: xs) = cong (appendNilR xs)  
