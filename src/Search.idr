@@ -1,6 +1,7 @@
 module Search
 
 import RegExp
+import SmartCons
 
 %default total
 
@@ -75,9 +76,9 @@ derivSound {x = x}{e = (Chr x')} pr with (decEq x' x)
   derivSound {x = x}{e = (Chr x)} pr | (Yes Refl) with (inEpsInv pr)
     derivSound {x = x}{e = (Chr x)} pr | (Yes Refl) | Refl = InChr
   derivSound {x = x}{e = (Chr x')} pr | (No contra) = void (inZeroInv pr)
-derivSound {e = (Cat x y)} pr with (hasEmptyDec x)
-  derivSound {e = (Cat x y)} pr | (Yes prf) = ?rhs_1
-  derivSound {e = (Cat x y)} pr | (No contra) = ?rhs_2
+derivSound {e = (Cat e e')}{x} pr with (hasEmptyDec e)
+  derivSound {e = (Cat e e')}{x} pr | (Yes prf) = ?rhs 
+  derivSound {e = (Cat e e')}{x} pr | (No contra) = ?rhs_2
 derivSound {e = (Alt x y)} (InAltL z)  = InAltL (derivSound z)
 derivSound {e = (Alt x y)} (InAltR z)  = InAltR (derivSound z)
 derivSound {e = (Star x)} (InCat y z prf) with (derivSound y)
