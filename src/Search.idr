@@ -78,5 +78,7 @@ derivSound {x = x}{e = (Chr x')} pr with (decEq x' x)
 derivSound {e = (Cat x y)} pr with (hasEmptyDec x)
   derivSound {e = (Cat x y)} pr | (Yes prf) = ?rhs_1
   derivSound {e = (Cat x y)} pr | (No contra) = ?rhs_2
-derivSound {e = (Alt x y)} pr = ?rhs_5
-derivSound {e = (Star x)} pr = ?rhs_6
+derivSound {e = (Alt x y)} (InAltL z)  = InAltL (derivSound z)
+derivSound {e = (Alt x y)} (InAltR z)  = InAltR (derivSound z)
+derivSound {e = (Star x)} (InCat y z prf) with (derivSound y)
+  derivSound {e = (Star x)} (InCat y z prf) | pr = ?rhs
