@@ -8,7 +8,7 @@ data RegExp : Type where
   Chr  : Char -> RegExp
   Cat  : RegExp -> RegExp -> RegExp
   Alt  : RegExp -> RegExp -> RegExp
-  Star : RegExp -> RegExp  
+  Star : RegExp -> RegExp    
   
 data InRegExp : List Char -> RegExp -> Type where
   InEps : InRegExp [] Eps
@@ -29,3 +29,19 @@ inZeroInv InEps impossible
 
 inEpsInv : InRegExp xs Eps -> xs = []
 inEpsInv InEps = Refl
+
+inChrNil : InRegExp [] (Chr c) -> Void
+inChrNil InEps impossible
+
+concatNil : Prelude.List.Nil = (xs ++ ys) -> (xs = Prelude.List.Nil , ys = Prelude.List.Nil)
+concatNil {xs = []}{ys = []} p = (Refl, Refl)
+concatNil {xs = []}{ys = (x :: xs)} p = void (lemma_val_not_nil (sym p))
+concatNil {xs = (x :: xs)}{ys = ys} p = void (lemma_val_not_nil (sym p))
+
+inCatNil : InRegExp [] (Cat e e') -> (InRegExp [] e , InRegExp [] e')
+inCatNil (InCat x y prf) with (concatNil prf)
+  inCatNil (InCat x y prf) | (Refl , Refl) = (x, y)
+
+inAltNil : InRegExp [] (Alt e e') -> Either (InRegExp [] e) (InRegExp [] e')
+inAltNil (InAltL x) = Left x
+inAltNil (InAltR x) = Right x

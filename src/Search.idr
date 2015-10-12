@@ -6,55 +6,25 @@ import SmartCons
 %default total
 
 -- emptyness test
-
-data HasEmpty : RegExp -> Type where
-  HasEps  : HasEmpty Eps
-  HasAltL : (r : RegExp) -> 
-            HasEmpty l   -> 
-            HasEmpty (Alt l r)
-  HasAltR : (l : RegExp) -> 
-            HasEmpty r   -> 
-            HasEmpty (Alt l r)
-  HasCat : HasEmpty l   ->
-           HasEmpty r   ->
-           HasEmpty (Cat l r)
-  HasStar : (e : RegExp) -> 
-            HasEmpty (Star e)                    
-
-hasEmptyZero : HasEmpty Zero -> Void
-hasEmptyZero HasEps impossible
-
-hasEmptyChr : {c : Char} -> HasEmpty (Chr c) -> Void
-hasEmptyChr HasEps impossible
-
-hasEmptyCatInv : HasEmpty (Cat l r) -> 
-                 (HasEmpty l, HasEmpty r)
-hasEmptyCatInv (HasCat l r) = (l , r)                
-                                                                                                      
-hasEmptyAltInv : HasEmpty (Alt l r) -> 
-                 Either (HasEmpty l) (HasEmpty r)
-hasEmptyAltInv (HasAltL r pl) = Left pl
-hasEmptyAltInv (HasAltR l pr) = Right pr               
                                                                                                             
-hasEmptyDec : (e : RegExp) -> Dec (HasEmpty e)
-hasEmptyDec Zero = No hasEmptyZero
-hasEmptyDec Eps = Yes HasEps
-hasEmptyDec (Chr c) = No hasEmptyChr
-hasEmptyDec (Alt l r) with (hasEmptyDec l)
- | Yes prf = Yes (HasAltL r prf)
- | No nprf with (hasEmptyDec r)
-      | Yes prf' = Yes (HasAltR l prf')
-      | No nprf' = No (either nprf nprf' . hasEmptyAltInv)
-hasEmptyDec (Cat l r) with (hasEmptyDec l)
-                      | Yes prf with (hasEmptyDec r)
-                                     | Yes prf' = Yes (HasCat prf prf')
-                                     | No nprf' = No (nprf' . snd . hasEmptyCatInv)
-                      | No nprf = No (nprf . fst . hasEmptyCatInv)               
-hasEmptyDec (Star e) = Yes (HasStar e)
+hasEmptyDec : (e : RegExp) -> Dec (InRegExp [] e)
+hasEmptyDec Zero = No (void . inZeroInv)
+hasEmptyDec Eps = Yes InEps
+hasEmptyDec (Chr c) = No inChrNil
+hasEmptyDec (Cat e e') with (hasEmptyDec e)
+  hasEmptyDec (Cat e e') | (Yes prf) with (hasEmptyDec e')
+    hasEmptyDec (Cat e e') | (Yes prf) | (Yes prf') = Yes (InCat prf prf' Refl)
+    hasEmptyDec (Cat e e') | (Yes prf) | (No contra) = No (contra . snd . inCatNil)
+  hasEmptyDec (Cat e e') | (No contra) = No (contra . fst . inCatNil)
+hasEmptyDec (Alt e e') with (hasEmptyDec e)
+  hasEmptyDec (Alt e e') | (Yes prf) = Yes (InAltL prf)
+  hasEmptyDec (Alt e e') | (No contra) with (hasEmptyDec e')
+    hasEmptyDec (Alt e e') | (No contra) | (Yes prf) = Yes (InAltR prf)
+    hasEmptyDec (Alt e e') | (No contra) | (No f) = No (void . either contra f . inAltNil)
+hasEmptyDec (Star e) = Yes (InStar (InAltL InEps))
 
 
 -- derivative definition
-
 
 deriv : (e : RegExp) -> Char -> RegExp
 deriv Zero c = Zero
@@ -62,24 +32,57 @@ deriv Eps c = Zero
 deriv (Chr c') c with (decEq c' c)
   deriv (Chr c) c  | Yes Refl = Eps
   deriv (Chr c') c | No nprf = Zero
-deriv (Alt l r) c = Alt (deriv l c) (deriv r c)
-deriv (Star e) c = Cat (deriv e c) (Star e)
+deriv (Alt l r) c = (deriv l c) .|. (deriv r c)
+deriv (Star e) c = (deriv e c) .@. (Star e)
 deriv (Cat l r) c with (hasEmptyDec l)
-  deriv (Cat l r) c | Yes prf = Alt (Cat (deriv l c) r) (deriv r c)
-  deriv (Cat l r) c | No nprf = Cat (deriv l c) r
+  deriv (Cat l r) c | Yes prf = ((deriv l c) .@. r) .|. (deriv r c)
+  deriv (Cat l r) c | No nprf = (deriv l c) .@. r
 
 
 derivSound : InRegExp xs (deriv e x) -> InRegExp (x :: xs) e
-derivSound {e = Zero} pr = void (inZeroInv pr)
-derivSound {e = Eps} pr = void (inZeroInv pr)
-derivSound {x = x}{e = (Chr x')} pr with (decEq x' x)
-  derivSound {x = x}{e = (Chr x)} pr | (Yes Refl) with (inEpsInv pr)
-    derivSound {x = x}{e = (Chr x)} pr | (Yes Refl) | Refl = InChr
-  derivSound {x = x}{e = (Chr x')} pr | (No contra) = void (inZeroInv pr)
-derivSound {e = (Cat e e')}{x} pr with (hasEmptyDec e)
-  derivSound {e = (Cat e e')}{x} pr | (Yes prf) = ?rhs 
-  derivSound {e = (Cat e e')}{x} pr | (No contra) = ?rhs_2
-derivSound {e = (Alt x y)} (InAltL z)  = InAltL (derivSound z)
-derivSound {e = (Alt x y)} (InAltR z)  = InAltR (derivSound z)
-derivSound {e = (Star x)} (InCat y z prf) with (derivSound y)
-  derivSound {e = (Star x)} (InCat y z prf) | pr = ?rhs
+derivSound {e = Zero}{xs = xs}{x = x} pr = void (inZeroInv pr)
+derivSound {e = Eps}{xs = xs}{x = x} pr = void (inZeroInv pr)
+derivSound {e = (Chr c)}{xs = xs}{x = x} pr with (decEq c x)
+  derivSound {e = (Chr c)}{xs = xs}{x = c} pr | (Yes Refl) with (inEpsInv pr)
+    derivSound {e = (Chr c)}{xs = []}{x = c} pr | (Yes Refl) | Refl = InChr
+  derivSound {e = (Chr c)}{xs = xs}{x = x} pr | (No contra) = void (inZeroInv pr)
+derivSound {e = (Cat e e')}{xs = xs}{x = x} pr with (hasEmptyDec e)
+  derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (Yes prf) 
+    with (altOptSound (deriv e x .@. e') (deriv e' x) xs pr)
+      derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (Yes prf) | (InAltL y) 
+        with (catOptSound (deriv e x) e' xs y)
+        derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (Yes prf) | (InAltL y) | (InCat z w s) 
+          = rewrite s in InCat (derivSound z) w Refl
+      derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (Yes prf) | (InAltR y) with (derivSound y)
+        derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (Yes prf) | (InAltR y) | k = 
+          InCat prf k Refl
+  derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (No contra) 
+    with (catOptSound (deriv e x) e' xs pr)
+      derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (No contra) | (InCat y z prf) 
+        with (derivSound y)
+          derivSound {e = (Cat e e')}{xs = xs}{x = x} pr | (No contra) | (InCat y z p) | k 
+            = rewrite p in InCat k z Refl
+derivSound {e = (Alt e e')}{xs = xs}{x = x} pr with (altOptSound (deriv e x) (deriv e' x) xs pr)
+  derivSound {e = (Alt e e')}{xs = xs}{x = x} pr | (InAltL y) = InAltL (derivSound y)
+  derivSound {e = (Alt e e')}{xs = xs}{x = x} pr | (InAltR y) = InAltR (derivSound y)
+derivSound {e = (Star e)}{xs = xs}{x = x} pr with (catOptSound (deriv e x) (Star e) xs pr)
+  derivSound {e = (Star e)}{xs = xs}{x = x} pr | (InCat y z prf) with (derivSound y)
+    derivSound {e = (Star e)}{xs = xs}{x = x} pr | (InCat y z prf) | k 
+      = rewrite prf in InStar (InAltR (InCat k z Refl))
+
+
+derivComplete : InRegExp (x :: xs) e -> InRegExp xs (deriv e x)
+derivComplete {e = Zero}{xs = xs}{x = x} pr = void (inZeroInv pr)
+derivComplete {e = Eps}{xs = xs}{x = x} pr with (inEpsInv pr)
+  derivComplete {e = Eps}{xs = xs}{x = x} pr | eq = void (lemma_val_not_nil eq)
+derivComplete {e = (Chr y)}{xs = xs}{x = x} pr with (decEq y x)
+  derivComplete {e = (Chr x)}{xs = []}{x = x} InChr | (Yes Refl) = InEps
+  derivComplete {e = (Chr x)}{xs = []}{x = x} InChr | (No contra) = void (contra Refl)
+derivComplete {e = (Cat y z)}{xs = xs}{x = x} pr with (hasEmptyDec y)
+  derivComplete {e = (Cat y z)}{xs = xs}{x = x} (InCat w s p) | (Yes prf) = ?rhs_1
+  derivComplete {e = (Cat y z)}{xs = xs}{x = x} (InCat w s p) | (No contra) = ?rhs_3
+derivComplete {e = (Alt e e')}{xs = xs}{x = x} (InAltL y) 
+  = altOptComplete (deriv e x) (deriv e' x) xs (InAltL (derivComplete y))
+derivComplete {e = (Alt e e')}{xs = xs}{x = x} (InAltR y) 
+  = altOptComplete (deriv e x) (deriv e' x) xs (InAltR (derivComplete y)) 
+derivComplete {e = (Star y)}{xs = xs}{x = x} pr = ?rhs_6
