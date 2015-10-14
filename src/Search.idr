@@ -38,7 +38,6 @@ deriv (Cat l r) c with (hasEmptyDec l)
   deriv (Cat l r) c | Yes prf = ((deriv l c) .@. r) .|. (deriv r c)
   deriv (Cat l r) c | No nprf = (deriv l c) .@. r
 
-
 derivSound : InRegExp xs (deriv e x) -> InRegExp (x :: xs) e
 derivSound {e = Zero}{xs = xs}{x = x} pr = void (inZeroInv pr)
 derivSound {e = Eps}{xs = xs}{x = x} pr = void (inZeroInv pr)
@@ -79,10 +78,25 @@ derivComplete {e = (Chr y)}{xs = xs}{x = x} pr with (decEq y x)
   derivComplete {e = (Chr x)}{xs = []}{x = x} InChr | (Yes Refl) = InEps
   derivComplete {e = (Chr x)}{xs = []}{x = x} InChr | (No contra) = void (contra Refl)
 derivComplete {e = (Cat y z)}{xs = xs}{x = x} pr with (hasEmptyDec y)
-  derivComplete {e = (Cat y z)}{xs = xs}{x = x} (InCat w s p) | (Yes prf) = ?rhs_1
-  derivComplete {e = (Cat y z)}{xs = xs}{x = x} (InCat w s p) | (No contra) = ?rhs_3
+  derivComplete {e = (Cat y z)}{xs = xs}{x = x} (InCat {xs = []} w s Refl) | (Yes prf) 
+    = altOptComplete (deriv y x .@. z) (deriv z x) xs (InAltR (derivComplete s))
+  derivComplete {e = (Cat y z)}{xs = ys ++ ys1}{x = x} (InCat {xs = (x :: ys)}{ys = ys1} w s Refl)
+    | (Yes prf) 
+      = altOptComplete (deriv y x .@. z) (deriv z x) _ 
+                       (InAltL (catOptComplete (deriv y x) z (ys ++ ys1) 
+                                (InCat (derivComplete w) s Refl)))
+  derivComplete {e = (Cat y z)}{xs = xs}{x = x} (InCat {xs = []} w s eq) | (No contra) 
+      = void (contra w) 
+  derivComplete {e = (Cat y z)}{xs = ys ++ ys1}{x = x} (InCat {xs = (x :: ys)}{ys = ys1} w s Refl)
+    | (No contra) 
+      = catOptComplete (deriv y x) z (ys ++ ys1) (InCat (derivComplete w) s Refl)
 derivComplete {e = (Alt e e')}{xs = xs}{x = x} (InAltL y) 
   = altOptComplete (deriv e x) (deriv e' x) xs (InAltL (derivComplete y))
 derivComplete {e = (Alt e e')}{xs = xs}{x = x} (InAltR y) 
   = altOptComplete (deriv e x) (deriv e' x) xs (InAltR (derivComplete y)) 
-derivComplete {e = (Star y)}{xs = xs}{x = x} pr = ?rhs_6
+derivComplete {e = (Star y)}{xs = xs}{x = x} (InStar (InAltL z)) 
+  = void (lemma_val_not_nil (inEpsInv z)) 
+derivComplete {e = (Star y)}{xs = xs}{x = x} (InStar (InAltR (InCat {xs = []} z w Refl))) 
+  = derivComplete w
+derivComplete {e = (Star y)}{xs = ys ++ ys1}{x = x} (InStar (InAltR (InCat {xs = (x :: ys)}{ys = ys1} z w Refl))) 
+  = catOptComplete (deriv y x) (Star y) (ys ++ ys1) (InCat (derivComplete z) w Refl) 
