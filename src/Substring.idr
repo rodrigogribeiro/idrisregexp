@@ -28,3 +28,13 @@ noSubstringCons  npre nsub (MkSubstring (y :: ys) ts zs eq re) with (lemma_cons_
   noSubstringCons  npre nsub (MkSubstring (y :: ys) ts zs eq re) | (Refl, Refl) 
     = nsub (MkSubstring ys ts zs Refl re) 
  
+subStringDec : (e : RegExp) -> (xs : List Char) -> Dec (Substring e xs)
+subStringDec e [] with (hasEmptyDec e)
+  subStringDec e [] | (Yes prf) = Yes (MkSubstring [] [] [] Refl prf)
+  subStringDec e [] | (No contra) = No (noSubstringNil (noPrefixNil contra))
+subStringDec e (x :: xs) with (prefixDec e (x :: xs))
+  subStringDec e (x :: xs) | (Yes (MkPrefix ys zs eq re)) = Yes (MkSubstring [] ys zs eq re)
+  subStringDec e (x :: xs) | (No contra) with (subStringDec e xs)
+    subStringDec e (x :: xs) | (No contra) | (Yes (MkSubstring ys ts zs eq re)) 
+      = Yes (MkSubstring (x :: ys) ts zs (cong eq) re)
+    subStringDec e (x :: xs) | (No contra) | (No contra1) = No (noSubstringCons contra contra1)
