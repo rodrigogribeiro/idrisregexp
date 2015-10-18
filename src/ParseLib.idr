@@ -66,6 +66,15 @@ p <??> q = p <**> (q <|> pReturn id)
 pChoice : DecEq s => List (Parser s a) -> Parser s a
 pChoice = foldr (<|>) pFail
 
+pSyms : DecEq s => List s -> Parser s (List s)
+pSyms xs = Prelude.Foldable.foldr step val xs
+           where
+             val = pReturn []
+             step x ac = (::) <$> pSym x <*> ac
+
+pPack : DecEq s => List s -> Parser s a -> List s -> Parser s a
+pPack l p r = pSyms l *> p <* pSyms r
+
 -- chainl
 
 applyAll : a -> List (a -> a) -> a
