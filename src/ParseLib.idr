@@ -1,32 +1,81 @@
 module ParseLib
 
--- simple parsing library
+-- parser definition
 
-%default total
+record Parser (s : Type)(a : Type) where
+  constructor MkParser
+  runParser : List s -> List (a, List s)
+  
+-- basic parsers  
+    
+pFail : Parser s a
+pFail = MkParser (\ s => [])
 
-data Parser : (s : Type) -> (a : Type) -> Type where
-  pFail   : Parser s a
-  pReturn : (v : a) -> Parser s a
-  pSym    : (v : s) -> Parser s s
+pReturn : a -> Parser s a
+pReturn v = MkParser (\ s => [(v,s)])
 
+pSym : DecEq s => s -> Parser s s
+pSym x = MkParser (\ s => 
+                     case s of
+                       []        => []
+                       (y :: ys) => 
+                          case decEq x y of
+                            Yes prf   => [(x,ys)] 
+                            No contra => [])
 
-runParser : DecEq s => Parser s a -> List s -> List (a, List s)
-runParser pFail s = []
-runParser (pReturn v) s = [ (v , s) ]
-runParser (pSym v) [] = []
-runParser (pSym v) (x :: xs) with (decEq v x)
-  runParser (pSym v) (v :: xs) | (Yes Refl) = [(v , xs)]
-  runParser (pSym v) (x :: xs) | (No contra) = []
+pSatisfy : (s -> Bool) -> Parser s s
+pSatisfy p = MkParser (\ s => case s of
+                                [] => []
+                                (x :: xs) => 
+                                  if p x then [(x,xs)] 
+                                    else [])
+
+-- some instances
 
 instance DecEq s => Functor (Parser s) where
-  map f p = pReturn f :<*>: p
+  map f p = MkParser (\ s => map (\ (x , ys) => (f x, ys)) 
+                                 (runParser p s))
 
 instance DecEq s => Applicative (Parser s) where
   pure = pReturn
-  (<*>) l r s = [(f x , ys) | (f , xs) <- runParser]
+  p <*> p' = MkParser (\ s => [ (f y , ys) | (f , xs) <- runParser p s ,
+                                             (y , ys) <- runParser p' xs ]) 
 
-option : Parser s a -> a -> Parser s a
-option p v = p :<|>: pReturn v 
+instance DecEq s => Alternative (Parser s) where
+  empty = pFail
+  p <|> p' = MkParser (\ s => runParser p s ++ runParser p' s)
 
-pMany :: Parser s a -> Parser s [a]
-pMany p = (::) <$> p :<*>: pMany p  
+
+-- derived combinators
+
+pMany : DecEq s => Parser s a -> Parser s (List a)
+pMany p = (::) <$> p <*> pMany p <|> pReturn []
+
+pMany1 : DecEq s => Parser s a -> Parser s (List a)
+pMany1 p = (::) <$> p <*> pMany p
+
+infixl 5 <**>
+infixl 5 <??>
+
+(<**>) : DecEq s => Parser s b -> Parser s (b -> a) -> Parser s a
+p <**> q = (\ a => \ f => f a) <$> p <*> q
+
+(<??>) : DecEq s => Parser s a -> Parser s (a -> a) -> Parser s a
+p <??> q = p <**> (q <|> pReturn id)
+
+pChoice : DecEq s => List (Parser s a) -> Parser s a
+pChoice = foldr (<|>) pFail
+
+-- chainl
+
+applyAll : a -> List (a -> a) -> a
+applyAll x fs = foldl (\ ac => \ f => f ac) x fs
+
+pChainl : DecEq s => Parser s (a -> a -> a) -> Parser s a -> Parser s a
+pChainl op p = applyAll <$> p <*> pMany (flip <$> op <*> p)
+
+-- chainr
+
+pChainR : DecEq s => Parser s (a -> a -> a) -> Parser s a -> Parser s a
+pChainR op p = r where r = p <??> (flip <$> op <*> r)
+
