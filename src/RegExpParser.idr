@@ -10,3 +10,16 @@ pChar = Chr <$> pSatisfy p
 
 pWord : Parser Char RegExp
 pWord = (foldl1 Cat) <$> pMany1 pChar
+
+
+pAtom : Parser Char RegExp
+pAtom = pWord <??> (const Star <$> pSym '*') <|>
+        pPack l pAtom r
+        where
+          l = unpack "("
+          r = unpack ")"
+
+pExp : Parser Char RegExp
+pExp = pChainl pPlus pAtom
+       where
+         pPlus = const Alt <$> pSym '+'
