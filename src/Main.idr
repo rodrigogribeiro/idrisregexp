@@ -21,7 +21,7 @@ searchLines e = searchLine []
                   searchLine acc = if (not (! eof)) then 
                                       (do
                                         l <- readLine
-                                        case subStringDec e l of
+                                        case subStringDec e (unpack l) of
                                            Yes _ => searchLine (l :: acc)
                                            No _  => searchLine acc)
                                     else return acc       
@@ -40,7 +40,7 @@ searchFiles e (f::fs)
      = do
          r <-  searchFile e f
          rs <- searchFiles e fs
-         return (r ++ rs)
+         return (r ++ "\n" ++ rs)
   
 
 process : List String -> {[STDIO, FILE_IO]} Eff ()
