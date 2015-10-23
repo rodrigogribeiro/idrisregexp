@@ -10,29 +10,31 @@ import RegExpParser
 import RegExp
 import Substring
 
-printUsage : {[STDIO, SYSTEM]} Eff ()
-printUsage = 
-  putStrLn "Usage: igrep [REGEXP] [FILELIST]"
+printUsage : {[STDIO]} Eff ()
+printUsage = putStrLn "Usage: igrep [REGEXP] [FILELIST]"
   
-searchLines : RegExp -> {FILE_IO (OpenFile Read)} Eff (List String) 
+search : RegExp -> String -> String
+search e s with (subStringDec e (unpack s)) 
+  search e s | Yes _ = s
+  search e s | No _ = ""
+  
+searchLines : RegExp -> { [FILE_IO (OpenFile Read)] } Eff (List String) 
 searchLines e = searchLine []
                 where
-                  searchLine : List String -> {FILE_IO (OpenFile Read)} Eff (List String)
-                  searchLine acc = if (not (! eof)) then 
-                                      (do
-                                        l <- readLine
-                                        case subStringDec e (unpack l) of
-                                           Yes _ => searchLine (l :: acc)
-                                           No _  => searchLine acc)
-                                    else return acc       
+                  searchLine : List String -> { [FILE_IO (OpenFile Read)] } Eff (List String)
+                  searchLine acc = if (not (! eof)) then
+                                      let l = !readLine in
+                                        pure ((search e l) :: acc)
+                                   else pure acc
   
 searchFile : RegExp -> String -> {[FILE_IO ()]} Eff (List String)
 searchFile e f 
-     = do
-         open f Read
-         xs <- searchLines e
-         close 
-         return xs
+     = case !(open f Read) of
+         True => do 
+                    xs <- searchLines e
+                    close 
+                    return xs
+         False => pure [""]
   
 searchFiles : RegExp -> List String -> {[FILE_IO ()]} Eff (List String)
 searchFiles _ [] = return []
@@ -40,26 +42,23 @@ searchFiles e (f::fs)
      = do
          r <-  searchFile e f
          rs <- searchFiles e fs
-         return (r ++ "\n" ++ rs)
+         return (r ++ ["\n"] ++ rs)
   
 
-process : List String -> {[STDIO, FILE_IO]} Eff ()
+process : List String -> {[STDIO, FILE_IO ()]} Eff ()
 process [] = return ()
-process [ _ ] = printUsage
-process (_ :: e :: []) = printUsage
-process ( _ :: e :: fs) 
+process [ x ] = printUsage
+process (x :: e :: []) = printUsage
+process ( x :: e :: fs) 
   = case runParser pExp (unpack e) of 
         [] => putStrLn ("Parser error on:" ++ e)
-        ((exp,_) :: _) 
-          => do
-              rs <- searchFiles e fs
-              map putStrLn rs
+        (r :: rs) => putStrLn (concat (searchFiles (fst r) fs))
 
-interface : {[STDIO, SYSTEM, FILE_IO]} Eff ()
+interface : {[STDIO, SYSTEM, FILE_IO ()]} Eff ()
 interface = do
-            putStrLn "IGrep - grep for Idris"
-            args <- getArgs
-            process args
+              putStrLn "IGrep - grep for Idris"
+              args <- getArgs
+              process args
             
 main : IO ()
 main = run interface            
