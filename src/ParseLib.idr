@@ -20,8 +20,8 @@ pSym x = MkParser (\ s =>
                        []        => []
                        (y :: ys) => 
                           case decEq x y of
-                            Yes prf   => [(x,ys)] 
-                            No contra => [])
+                            Yes prf => [(x,ys)] 
+                            No c    => [])
 
 pSatisfy : (s -> Bool) -> Parser s s
 pSatisfy p = MkParser (\ s => case s of
@@ -80,8 +80,8 @@ pPack l p r = pSyms l *> p <* pSyms r
 applyAll : a -> List (a -> a) -> a
 applyAll x fs = foldl (\ ac => \ f => f ac) x fs
 
-pChainl : DecEq s => Parser s (a -> a -> a) -> Parser s a -> Parser s a
-pChainl op p = applyAll <$> p <*> pMany (flip <$> op <*> p)
+pChainL : DecEq s => Parser s (a -> a -> a) -> Parser s a -> Parser s a
+pChainL op p = applyAll <$> p <*> pMany (flip <$> op <*> p)
 
 -- chainr
 

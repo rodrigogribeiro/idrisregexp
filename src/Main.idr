@@ -63,8 +63,4 @@ interface = do
               process args
             
 main : IO ()
-main = run interface            
-        
--- Local Variables:
--- idris-packages: ("effects")
--- End:
+main = run interface
