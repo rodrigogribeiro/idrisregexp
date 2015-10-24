@@ -15,7 +15,7 @@ printUsage = putStrLn "Usage: igrep [REGEXP] [FILELIST]"
   
 search : RegExp -> String -> String
 search e s with (subStringDec e (unpack s)) 
-  search e s | Yes _ = s
+  search e s | Yes _ = pack ('\n' :: (unpack s))
   search e s | No _ = ""
   
 searchLines : RegExp -> { [FILE_IO (OpenFile Read)] } Eff (List String) 
@@ -49,11 +49,13 @@ process : List String -> {[STDIO, FILE_IO ()]} Eff ()
 process [] = return ()
 process [ x ] = printUsage
 process (x :: e :: []) = printUsage
-process ( x :: e :: fs) 
-  = case runParser pExp (unpack e) of 
-        [] => putStrLn ("Parser error on:" ++ e)
-        (r :: rs) => putStrLn (concat (searchFiles (fst r) fs))
-
+process (x :: e :: fs) with (runParser pExp (unpack e)) 
+  process (x :: e :: fs) | [] = putStrLn ("Parser error on:" ++ e)
+  process (x :: e :: fs) | (r :: rs) 
+          = do
+             ss <- searchFiles (fst r) fs
+             putStrLn (concat ss)
+ 
 interface : {[STDIO, SYSTEM, FILE_IO ()]} Eff ()
 interface = do
               putStrLn "IGrep - grep for Idris"
@@ -63,3 +65,6 @@ interface = do
 main : IO ()
 main = run interface            
         
+-- Local Variables:
+-- idris-packages: ("effects")
+-- End:

@@ -6,7 +6,8 @@ import RegExp
 pChar : Parser Char RegExp
 pChar = Chr <$> pSatisfy p
           where
-            p c = not (elem c (unpack "()+*"))
+            p c = not (elem c (unpack "()+*")) && 
+                  not (isSpace c)
 
 pWord : Parser Char RegExp
 pWord = (foldl1 Cat) <$> pMany1 pChar
@@ -23,3 +24,4 @@ pExp : Parser Char RegExp
 pExp = pChainl pPlus pAtom
        where
          pPlus = const Alt <$> pSym '+'
+
