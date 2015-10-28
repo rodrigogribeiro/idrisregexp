@@ -5,7 +5,6 @@ import Effect.File
 import Effect.StdIO
 import Effect.System
 
-import ParseLib
 import RegExpParser
 import RegExp
 import Substring
