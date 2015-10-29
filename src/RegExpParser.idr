@@ -6,6 +6,11 @@ import public Lightyear.Strings
 
 import RegExp
 
+infixl 5 <**>
+
+(<**>) :: Parser b -> Parser (b -> a) -> Parser a
+p <**> q = (\a => \f => f a) <$> p <*> q
+
 pChar : Parser RegExp
 pChar = Chr <$> noneOf "()*+"
 
@@ -18,13 +23,22 @@ pPlus = const Alt <$> lexeme (char '+')
 star : Parser (RegExp -> RegExp)
 star = const Star <$> lexeme (char '*') 
 
-mutual
-  pExp' : Parser (RegExp -> RegExp)
-  pExp' = pPlus <*> pExp
+mutual 
+  pFactor : Parser RegExp
+  pFactor = pAtom <|> parens pExp
+  
+  pTerm' : Parser RegExp
+  pTerm' = Cat <$> pFactor <*> pTerm' <|>
+           star <*> pTerm'            <|>
+           pure Eps
+           
+  pTerm : Parser RegExp
+  pTerm = Cat <$> pTerm' <*> pTerm    <|>
+          pure Eps
+          
+  pExp' : Parser RegExp
+  pExp' = pPlus <*> pTerm <*> pExp'   <|>
+          pure Eps
   
   pExp : Parser RegExp
-  pExp = (\ a => \ f => f a) <$>
-         pAtom <*> pFact
-         where
-           pFact : Parser (RegExp -> RegExp)
-           pFact = pExp' <|> star <|> pure id
+  pExp = Cat <$> pTerm <*> pExp'

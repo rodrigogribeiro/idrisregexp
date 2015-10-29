@@ -48,11 +48,12 @@ process : List String -> {[STDIO, FILE_IO ()]} Eff ()
 process [] = return ()
 process [ x ] = printUsage
 process (x :: e :: []) = printUsage
-process (x :: e :: fs) with (runParser pExp (unpack e)) 
-  process (x :: e :: fs) | [] = putStrLn ("Parser error on:" ++ e)
-  process (x :: e :: fs) | (r :: rs) 
+process (x :: e :: fs) with (parse pExp e) 
+  process (x :: e :: fs) | Left err = putStrLn ("Parser error on:" ++ err)
+  process (x :: e :: fs) | Right r
           = do
-             ss <- searchFiles (fst r) fs
+             putStrLn "here!"
+             ss <- searchFiles r fs
              putStrLn (concat ss)
  
 interface : {[STDIO, SYSTEM, FILE_IO ()]} Eff ()
