@@ -5,40 +5,31 @@ import public Lightyear.Char
 import public Lightyear.Strings
 
 import RegExp
-
-infixl 5 <**>
-
-(<**>) :: Parser b -> Parser (b -> a) -> Parser a
-p <**> q = (\a => \f => f a) <$> p <*> q
+import SmartCons
 
 pChar : Parser RegExp
 pChar = Chr <$> noneOf "()*+"
 
 pAtom : Parser RegExp
-pAtom = foldr Cat Eps <$> many pChar
+pAtom = foldl1 (.@.) <$> some pChar
 
-pPlus : Parser (RegExp -> RegExp -> RegExp)
-pPlus = const Alt <$> lexeme (char '+')
-
-star : Parser (RegExp -> RegExp)
-star = const Star <$> lexeme (char '*') 
+pstar : Parser (RegExp -> RegExp)
+pstar = const star <$> lexeme (char '*') 
 
 mutual 
+  pStar : Parser (RegExp -> RegExp)
+  pStar = pstar <|> pure id
+
   pFactor : Parser RegExp
-  pFactor = pAtom <|> parens pExp
+  pFactor =  pAtom <|> (commitTo (parens pExp))
   
-  pTerm' : Parser RegExp
-  pTerm' = Cat <$> pFactor <*> pTerm' <|>
-           star <*> pTerm'            <|>
-           pure Eps
-           
   pTerm : Parser RegExp
-  pTerm = Cat <$> pTerm' <*> pTerm    <|>
-          pure Eps
+  pTerm = f <$> pFactor <*!> pStar
+          where
+            f e g = g e
           
-  pExp' : Parser RegExp
-  pExp' = pPlus <*> pTerm <*> pExp'   <|>
-          pure Eps
+  pExp' : Parser (RegExp -> RegExp)
+  pExp' = foldl (.) id <$> many ((flip (.|.)) <$> (lexeme (char '+') *!> pTerm))
   
   pExp : Parser RegExp
-  pExp = Cat <$> pTerm <*> pExp'
+  pExp = (\t => \f => f t) <$> pTerm <*!> pExp'

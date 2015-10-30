@@ -9,6 +9,7 @@ import RegExpParser
 import RegExp
 import Substring
 
+
 printUsage : {[STDIO]} Eff ()
 printUsage = putStrLn "Usage: igrep [REGEXP] [FILELIST]"
   
