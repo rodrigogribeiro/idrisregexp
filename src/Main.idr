@@ -15,18 +15,22 @@ printUsage = putStrLn "Usage: igrep [REGEXP] [FILELIST]"
   
 search : RegExp -> String -> String
 search e s with (subStringDec e (unpack s)) 
-  search e s | Yes _ = pack ('\n' :: (unpack s))
-  search e s | No _ = ""
+  search e s | Yes _ = s
+  search e s | No _ = ""  
   
+readFile : { [FILE_IO (OpenFile Read)] } Eff (List String)
+readFile = readFile' []
+           where
+             readFile' : List String -> { [FILE_IO (OpenFile Read)] } Eff (List String)
+             readFile' acc = if (not (! eof)) then 
+                               readFile' (! readLine :: acc)
+                             else pure (reverse acc)
+                            
 searchLines : RegExp -> { [FILE_IO (OpenFile Read)] } Eff (List String) 
-searchLines e = searchLine []
-                where
-                  searchLine : List String -> { [FILE_IO (OpenFile Read)] } Eff (List String)
-                  searchLine acc = if (not (! eof)) then
-                                      let l = !readLine in
-                                        pure ((search e l) :: acc)
-                                   else pure acc
-  
+searchLines e = do
+                 ls <- readFile
+                 pure (filter (not . isNil . unpack) (map (search e) ls))
+      
 searchFile : RegExp -> String -> {[FILE_IO ()]} Eff (List String)
 searchFile e f 
      = case !(open f Read) of
@@ -36,7 +40,7 @@ searchFile e f
                     return xs
          False => pure [""]
   
-searchFiles : RegExp -> List String -> {[FILE_IO ()]} Eff (List String)
+searchFiles : RegExp -> List String -> {[STDIO, FILE_IO ()]} Eff (List String)
 searchFiles _ [] = return []
 searchFiles e (f::fs) 
      = do
@@ -53,7 +57,6 @@ process (x :: e :: fs) with (parse pExp e)
   process (x :: e :: fs) | Left err = putStrLn ("Parser error on:" ++ err)
   process (x :: e :: fs) | Right r
           = do
-             putStrLn "here!"
              ss <- searchFiles r fs
              putStrLn (concat ss)
  

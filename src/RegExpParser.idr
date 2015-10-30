@@ -21,7 +21,7 @@ mutual
   pStar = pstar <|> pure id
 
   pFactor : Parser RegExp
-  pFactor =  pAtom <|> (commitTo (parens pExp))
+  pFactor =  pAtom -- <|> (commitTo (parens pExp))
   
   pTerm : Parser RegExp
   pTerm = f <$> pFactor <*!> pStar
