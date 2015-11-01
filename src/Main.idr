@@ -13,10 +13,12 @@ import Substring
 printUsage : {[STDIO]} Eff ()
 printUsage = putStrLn "Usage: igrep [REGEXP] [FILELIST]"
   
+  
 search : RegExp -> String -> String
 search e s with (subStringDec e (unpack s)) 
   search e s | Yes _ = s
   search e s | No _ = ""  
+  
   
 readFile : { [FILE_IO (OpenFile Read)] } Eff (List String)
 readFile = readFile' []
@@ -38,7 +40,7 @@ searchFile e f
                     xs <- searchLines e
                     close 
                     return xs
-         False => pure [""]
+         False => pure []
   
 searchFiles : RegExp -> List String -> {[STDIO, FILE_IO ()]} Eff (List String)
 searchFiles _ [] = return []
