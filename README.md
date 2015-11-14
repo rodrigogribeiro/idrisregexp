@@ -30,5 +30,21 @@ The syntax of regular expressions is as follows:
        | c
 
 where c is some character that isn't +, (,) and *.
-Note that some currently the tool does not support operators like
+Note that currently the tool does not support operators like
 complement, intersection and the empty set.
+
+
+Dependencies
+-----------
+
+The igrep tool depends on the following Idris libraries:
+
+- [Lightyear](https://github.com/ziman/lightyear), a parser combinator
+library for Idris.
+- [Effects](https://github.com/idris-lang/Idris-dev/tree/master/libs/effects),
+effectful computations in Idris.
+
+Effects library is already shipped within Idris compiler and Lightyear
+can be easily installed.
+
+The development is done using Idris version 0.9.19.
