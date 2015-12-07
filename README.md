@@ -45,6 +45,11 @@ library for Idris.
 effectful computations in Idris.
 
 Effects library is already shipped within Idris compiler and Lightyear
-can be easily installed.
+can be easily installed. Just download the library using the URL above
+and execute:
+
+    make clean
+    make test
+    make install
 
 The development is done using Idris version 0.9.19.
