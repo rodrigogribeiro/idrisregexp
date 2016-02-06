@@ -8,28 +8,34 @@ import RegExp
 import SmartCons
 
 pChar : Parser RegExp
-pChar = Chr <$> noneOf "()*+"
+pChar = Chr <$> noneOf "[]()*+"
 
 pAtom : Parser RegExp
 pAtom = foldl1 (.@.) <$> some pChar
 
 pstar : Parser (RegExp -> RegExp)
-pstar = const star <$> lexeme (char '*') 
+pstar = const star <$> lexeme (char '*')
 
-mutual 
-  pStar : Parser (RegExp -> RegExp)
-  pStar = pstar <|> pure id
+pPlus : Parser (RegExp -> RegExp)
+pPlus = const (\e => Cat e (star e)) <$> lexeme (char '+')
 
+pInBracketsChar : Parser RegExp
+pInBracketsChar = Chr <$> noneOf "[]^"
+
+pBrackets : Parser RegExp
+pBrackets = foldl Alt Zero <$> (brackets (many pInBracketsChar))
+
+pStar : Parser (RegExp -> RegExp)
+pStar = pstar <|> pure id
+
+mutual
   pFactor : Parser RegExp
-  pFactor =  pAtom <|>| (parens pExp)
-  
+  pFactor =  pBrackets <|>| pAtom <|>| (parens pExp)
+
   pTerm : Parser RegExp
-  pTerm = f <$> pFactor <*> pStar
+  pTerm = f <$> pFactor <*> (pPlus <|>| pStar)
           where
             f e g = g e
-          
-  pExp' : Parser (RegExp -> RegExp)
-  pExp' = foldl (.) id <$> many ((flip (.|.)) <$> (lexeme (char '+') *!> pTerm))
-  
+
   pExp : Parser RegExp
-  pExp = (\t => \f => f t) <$> pTerm <*!> pExp'
+  pExp = foldl Cat Eps <$> many pTerm
