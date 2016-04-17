@@ -4,6 +4,7 @@ import RegExp
 import Search
 
 %default total
+%access public export
 
 
 -- very simple inversion lemma
@@ -26,7 +27,7 @@ noPrefixNil : Not (InRegExp [] e) -> Not (Prefix e [])
 noPrefixNil ne (MkPrefix [] zs eq re) = ne re
 noPrefixNil ne (MkPrefix (x :: xs) zs eq re) = lemma_val_not_nil (sym eq)
 
-noPrefixCons : Not (InRegExp [] e) -> Not (Prefix (deriv e x) xs) -> Not (Prefix e (x :: xs))
+noPrefixCons : Not (InRegExp [] e) -> Not (Prefix.Prefix (deriv e x) xs) -> Not (Prefix.Prefix e (x :: xs))
 noPrefixCons nnil nder (MkPrefix [] zs eq re) = nnil re
 noPrefixCons nnil nder (MkPrefix (y :: ys) zs eq re) with (lemma_cons_inv eq)
   noPrefixCons {x = y}{xs = ys ++ zs} nnil nder (MkPrefix (y :: ys) zs eq re)

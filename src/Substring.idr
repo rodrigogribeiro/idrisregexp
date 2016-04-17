@@ -6,6 +6,7 @@ import Search
 import SmartCons
 
 %default total
+%access public export
 
 
 data Substring : (e : RegExp) -> (xs : List Char) -> Type where

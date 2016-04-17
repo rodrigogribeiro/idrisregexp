@@ -1,6 +1,7 @@
 module SmartCons
 
 import RegExp
+%access public export
 
 %default total
 
@@ -44,42 +45,30 @@ altOptSound Eps (Chr x) xs pr = pr
 altOptSound Eps (Cat x y) xs pr = pr
 altOptSound Eps (Alt x y) xs pr = pr
 altOptSound Eps (Star x) xs pr = pr
-altOptSound Eps (Comp x) xs pr = pr
 altOptSound (Chr x) Zero xs pr = InAltL pr
 altOptSound (Chr x) Eps xs pr = pr
 altOptSound (Chr x) (Chr y) xs pr = pr
 altOptSound (Chr x) (Cat y z) xs pr = pr
 altOptSound (Chr x) (Alt y z) xs pr = pr
 altOptSound (Chr x) (Star y) xs pr = pr
-altOptSound (Chr x) (Comp y) xs pr = pr
 altOptSound (Cat x y) Zero xs pr = InAltL pr
 altOptSound (Cat x y) Eps xs pr = pr
 altOptSound (Cat x y) (Chr z) xs pr = pr
 altOptSound (Cat x y) (Cat z w) xs pr = pr
 altOptSound (Cat x y) (Alt z w) xs pr = pr
 altOptSound (Cat x y) (Star z) xs pr = pr
-altOptSound (Cat x y) (Comp z) xs pr = pr
 altOptSound (Alt x y) Zero xs pr = InAltL pr
 altOptSound (Alt x y) Eps xs pr = pr
 altOptSound (Alt x y) (Chr z) xs pr = pr
 altOptSound (Alt x y) (Cat z w) xs pr = pr
 altOptSound (Alt x y) (Alt z w) xs pr = pr
 altOptSound (Alt x y) (Star z) xs pr = pr
-altOptSound (Alt x y) (Comp z) xs pr = pr
 altOptSound (Star x) Zero xs pr = InAltL pr
 altOptSound (Star x) Eps xs pr = pr
 altOptSound (Star x) (Chr y) xs pr = pr
 altOptSound (Star x) (Cat y z) xs pr = pr
 altOptSound (Star x) (Alt y z) xs pr = pr
 altOptSound (Star x) (Star y) xs pr = pr
-altOptSound (Star x) (Comp y) xs pr = pr
-altOptSound (Comp x) Zero xs pr = InAltL pr
-altOptSound (Comp x) Eps xs pr = pr
-altOptSound (Comp x) (Chr y) xs pr = pr
-altOptSound (Comp x) (Cat y z) xs pr = pr
-altOptSound (Comp x) (Alt y z) xs pr = pr
-altOptSound (Comp x) (Star y) xs pr = pr
-altOptSound (Comp x) (Comp y) xs pr = pr
 
 altOptComplete : (l : RegExp)  ->
                  (r : RegExp)  ->
@@ -95,7 +84,6 @@ altOptComplete Eps (Chr x) xs pr = pr
 altOptComplete Eps (Cat x y) xs pr = pr
 altOptComplete Eps (Alt x y) xs pr = pr
 altOptComplete Eps (Star x) xs pr = pr
-altOptComplete Eps (Comp x) xs pr = pr
 altOptComplete (Chr x) Zero xs (InAltL y) = y
 altOptComplete (Chr x) Zero xs (InAltR y) = void (inZeroInv y)
 altOptComplete (Chr x) Eps xs pr = pr
@@ -103,7 +91,6 @@ altOptComplete (Chr x) (Chr y) xs pr = pr
 altOptComplete (Chr x) (Cat y z) xs pr = pr
 altOptComplete (Chr x) (Alt y z) xs pr = pr
 altOptComplete (Chr x) (Star y) xs pr = pr
-altOptComplete (Chr x) (Comp y) xs pr = pr
 altOptComplete (Cat x y) Zero xs (InAltL z) = z
 altOptComplete (Cat x y) Zero xs (InAltR z) = void (inZeroInv z)
 altOptComplete (Cat x y) Eps xs pr = pr
@@ -111,7 +98,6 @@ altOptComplete (Cat x y) (Chr z) xs pr = pr
 altOptComplete (Cat x y) (Cat z w) xs pr = pr
 altOptComplete (Cat x y) (Alt z w) xs pr = pr
 altOptComplete (Cat x y) (Star z) xs pr = pr
-altOptComplete (Cat x y) (Comp z) xs pr = pr
 altOptComplete (Alt x y) Zero xs (InAltL z) = z
 altOptComplete (Alt x y) Zero xs (InAltR z) = void (inZeroInv z)
 altOptComplete (Alt x y) Eps xs pr = pr
@@ -119,7 +105,6 @@ altOptComplete (Alt x y) (Chr z) xs pr = pr
 altOptComplete (Alt x y) (Cat z w) xs pr = pr
 altOptComplete (Alt x y) (Alt z w) xs pr = pr
 altOptComplete (Alt x y) (Star z) xs pr = pr
-altOptComplete (Alt x y) (Comp z) xs pr = pr
 altOptComplete (Star x) Zero xs (InAltL y) = y
 altOptComplete (Star x) Zero xs (InAltR y) = void (inZeroInv y)
 altOptComplete (Star x) Eps xs pr = pr
@@ -127,82 +112,6 @@ altOptComplete (Star x) (Chr y) xs pr = pr
 altOptComplete (Star x) (Cat y z) xs pr = pr
 altOptComplete (Star x) (Alt y z) xs pr = pr
 altOptComplete (Star x) (Star y) xs pr = pr
-altOptComplete (Star x) (Comp y) xs pr = pr
-altOptComplete (Comp x) Zero xs (InAltL y) = y
-altOptComplete (Comp x) Zero xs (InAltR y) = void (inZeroInv y)
-altOptComplete (Comp x) Eps xs pr = pr
-altOptComplete (Comp x) (Chr y) xs pr = pr
-altOptComplete (Comp x) (Cat y z) xs pr = pr
-altOptComplete (Comp x) (Alt y z) xs pr = pr
-altOptComplete (Comp x) (Star y) xs pr = pr
-altOptComplete (Comp x) (Comp y) xs pr = pr
-
-altOptNotInSound : NotInRegExp xs (l .|. r) -> NotInRegExp xs (Alt l r)
-altOptNotInSound {l = Zero} pr = NotInAlt NotInZero pr
-altOptNotInSound {l = Eps}{r = Zero} (NotInEps f) = NotInAlt (NotInEps f) NotInZero 
-altOptNotInSound {l = Eps}{r = Eps} pr = pr
-altOptNotInSound {l = Eps}{r = (Chr x)} pr = pr
-altOptNotInSound {l = Eps}{r = (Cat x y)} pr = pr
-altOptNotInSound {l = Eps}{r = (Alt x y)} pr = pr
-altOptNotInSound {l = Eps}{r = (Star x)} pr = pr
-altOptNotInSound {l = Eps}{r = (Comp x)} pr = pr
-altOptNotInSound {l = (Chr x)}{r = Zero} pr = NotInAlt pr NotInZero
-altOptNotInSound {l = (Chr x)}{r = Eps} pr = pr
-altOptNotInSound {l = (Chr x)}{r = (Chr y)} pr = pr
-altOptNotInSound {l = (Chr x)}{r = (Cat y z)} pr = pr
-altOptNotInSound {l = (Chr x)}{r = (Alt y z)} pr = pr
-altOptNotInSound {l = (Chr x)}{r = (Star y)} pr = pr
-altOptNotInSound {l = (Chr x)}{r = (Comp y)} pr = pr
-altOptNotInSound {l = (Cat x y)}{r = Zero} pr = NotInAlt pr NotInZero
-altOptNotInSound {l = (Cat x y)}{r = Eps} pr = pr
-altOptNotInSound {l = (Cat x y)}{r = (Chr z)} pr = pr
-altOptNotInSound {l = (Cat x y)}{r = (Cat z w)} pr = pr
-altOptNotInSound {l = (Cat x y)}{r = (Alt z w)} pr = pr
-altOptNotInSound {l = (Cat x y)}{r = (Star z)} pr = pr
-altOptNotInSound {l = (Cat x y)}{r = (Comp z)} pr = pr
-altOptNotInSound {l = (Alt x y)}{r = Zero} pr = NotInAlt pr NotInZero
-altOptNotInSound {l = (Alt x y)}{r = Eps} pr = pr
-altOptNotInSound {l = (Alt x y)}{r = (Chr z)} pr = pr
-altOptNotInSound {l = (Alt x y)}{r = (Cat z w)} pr = pr
-altOptNotInSound {l = (Alt x y)}{r = (Alt z w)} pr = pr
-altOptNotInSound {l = (Alt x y)}{r = (Star z)} pr = pr
-altOptNotInSound {l = (Alt x y)}{r = (Comp z)} pr = pr
-altOptNotInSound {l = (Star x)}{r = Zero} pr = NotInAlt pr NotInZero
-altOptNotInSound {l = (Star x)}{r = Eps} pr = pr
-altOptNotInSound {l = (Star x)}{r = (Chr y)} pr = pr
-altOptNotInSound {l = (Star x)}{r = (Cat y z)} pr = pr
-altOptNotInSound {l = (Star x)}{r = (Alt y z)} pr = pr
-altOptNotInSound {l = (Star x)}{r = (Star y)} pr = pr
-altOptNotInSound {l = (Star x)}{r = (Comp y)} pr = pr
-altOptNotInSound {l = (Comp x)}{r = Zero} pr = NotInAlt pr NotInZero
-altOptNotInSound {l = (Comp x)}{r = Eps} pr = pr
-altOptNotInSound {l = (Comp x)}{r = (Chr y)} pr = pr
-altOptNotInSound {l = (Comp x)}{r = (Cat y z)} pr = pr
-altOptNotInSound {l = (Comp x)}{r = (Alt y z)} pr = pr
-altOptNotInSound {l = (Comp x)}{r = (Star y)} pr = pr
-altOptNotInSound {l = (Comp x)}{r = (Comp y)} pr = pr  
-
-altOptNotInComplete : NotInRegExp xs (Alt l r) -> NotInRegExp xs ((l .|. r))
-altOptNotInComplete {l = Zero} (NotInAlt x y) = y
-altOptNotInComplete {l = Eps}{r = Zero} (NotInAlt x y) = x
-altOptNotInComplete {l = Eps}{r = Eps} pr = pr
-altOptNotInComplete {l = Eps}{r = (Chr x)} pr = pr
-altOptNotInComplete {l = Eps}{r = (Cat x y)} pr = pr
-altOptNotInComplete {l = Eps}{r = (Alt x y)} pr = pr
-altOptNotInComplete {l = Eps}{r = (Star x)} pr = pr
-altOptNotInComplete {l = Eps}{r = (Comp x)} pr = pr
-altOptNotInComplete {l = (Chr x)}{r = Zero} (NotInAlt y z) = y
-altOptNotInComplete {l = (Chr x)}{r = Eps} pr = pr
-altOptNotInComplete {l = (Chr x)}{r = (Chr y)} pr = pr
-altOptNotInComplete {l = (Chr x)}{r = (Cat y z)} pr = pr
-altOptNotInComplete {l = (Chr x)}{r = (Alt y z)} pr = pr
-altOptNotInComplete {l = (Chr x)}{r = (Star y)} pr = pr
-altOptNotInComplete {l = (Chr x)}{r = (Comp y)} pr = pr
-altOptNotInComplete {l = (Cat x y)} pr = ?rhs_4
-altOptNotInComplete {l = (Alt x y)} pr = ?rhs_5
-altOptNotInComplete {l = (Star x)} pr = ?rhs_6
-altOptNotInComplete {l = (Comp x)} pr = ?rhs_7
-
 
 catOptSound : (l : RegExp) ->
               (r : RegExp) ->
@@ -217,35 +126,25 @@ catOptSound (Chr x) (Chr y) xs pr = pr
 catOptSound (Chr x) (Cat y z) xs pr = pr
 catOptSound (Chr x) (Alt y z) xs pr = pr
 catOptSound (Chr x) (Star y) xs pr = pr
-catOptSound (Chr x) (Comp y) xs pr = pr
 catOptSound (Cat x y) Zero xs pr = void (inZeroInv pr)
 catOptSound (Cat x y) Eps xs pr = InCat pr InEps (appendNilR xs)
 catOptSound (Cat x y) (Chr z) xs pr = pr
 catOptSound (Cat x y) (Cat z w) xs pr = pr
 catOptSound (Cat x y) (Alt z w) xs pr = pr
 catOptSound (Cat x y) (Star z) xs pr = pr
-catOptSound (Cat x y) (Comp z) xs pr = pr
 catOptSound (Alt x y) Zero xs pr = void (inZeroInv pr)
 catOptSound (Alt x y) Eps xs pr = InCat pr InEps (appendNilR xs)
 catOptSound (Alt x y) (Chr z) xs pr = pr
 catOptSound (Alt x y) (Cat z w) xs pr = pr
 catOptSound (Alt x y) (Alt z w) xs pr = pr
 catOptSound (Alt x y) (Star z) xs pr = pr
-catOptSound (Alt x y) (Comp z) xs pr = pr
 catOptSound (Star x) Zero xs pr = void (inZeroInv pr)
 catOptSound (Star x) Eps xs pr = InCat pr InEps (appendNilR xs)
 catOptSound (Star x) (Chr y) xs pr = pr
 catOptSound (Star x) (Cat y z) xs pr = pr
 catOptSound (Star x) (Alt y z) xs pr = pr
 catOptSound (Star x) (Star y) xs pr = pr
-catOptSound (Star x) (Comp y) xs pr = pr
-catOptSound (Comp x) Zero xs pr = void (inZeroInv pr)
-catOptSound (Comp x) Eps xs pr = InCat pr InEps (appendNilR xs)
-catOptSound (Comp x) (Chr y) xs pr = pr
-catOptSound (Comp x) (Cat y z) xs pr = pr
-catOptSound (Comp x) (Alt y z) xs pr = pr
-catOptSound (Comp x) (Star y) xs pr = pr
-catOptSound (Comp x) (Comp y) xs pr = pr
+
 
 catOptComplete : (l : RegExp) ->
                  (r : RegExp) ->
@@ -260,35 +159,24 @@ catOptComplete (Chr x) (Chr y) xs pr = pr
 catOptComplete (Chr x) (Cat y z) xs pr = pr
 catOptComplete (Chr x) (Alt y z) xs pr = pr
 catOptComplete (Chr x) (Star y) xs pr = pr
-catOptComplete (Chr x) (Comp y) xs pr = pr
 catOptComplete (Cat x y) Zero xs (InCat z w prf) = void (inZeroInv w)
 catOptComplete (Cat x y) Eps xs (InCat z InEps prf) = inRegLemma z prf
 catOptComplete (Cat x y) (Chr z) xs pr = pr
 catOptComplete (Cat x y) (Cat z w) xs pr = pr
 catOptComplete (Cat x y) (Alt z w) xs pr = pr
 catOptComplete (Cat x y) (Star z) xs pr = pr
-catOptComplete (Cat x y) (Comp z) xs pr = pr
 catOptComplete (Alt x y) Zero xs (InCat z w prf) = void (inZeroInv w)
 catOptComplete (Alt x y) Eps xs (InCat z InEps prf) = inRegLemma z prf
 catOptComplete (Alt x y) (Chr z) xs pr = pr
 catOptComplete (Alt x y) (Cat z w) xs pr = pr
 catOptComplete (Alt x y) (Alt z w) xs pr = pr
 catOptComplete (Alt x y) (Star z) xs pr = pr
-catOptComplete (Alt x y) (Comp z) xs pr = pr
 catOptComplete (Star x) Zero xs (InCat y z prf) = void (inZeroInv z)
 catOptComplete (Star x) Eps xs (InCat y InEps prf) = inRegLemma y prf
 catOptComplete (Star x) (Chr y) xs pr = pr
 catOptComplete (Star x) (Cat y z) xs pr = pr
 catOptComplete (Star x) (Alt y z) xs pr = pr
 catOptComplete (Star x) (Star y) xs pr = pr
-catOptComplete (Star x) (Comp y) xs pr = pr
-catOptComplete (Comp x) Zero xs (InCat y z prf) = void (inZeroInv z)
-catOptComplete (Comp x) Eps xs (InCat y InEps prf) = inRegLemma y prf
-catOptComplete (Comp x) (Chr y) xs pr = pr
-catOptComplete (Comp x) (Cat y z) xs pr = pr
-catOptComplete (Comp x) (Alt y z) xs pr = pr
-catOptComplete (Comp x) (Star y) xs pr = pr
-catOptComplete (Comp x) (Comp y) xs pr = pr
 
 starOptSound : (l : RegExp) ->
                (xs : List Char) ->
@@ -300,7 +188,6 @@ starOptSound (Chr x) xs pr = pr
 starOptSound (Cat x y) xs pr = pr
 starOptSound (Alt x y) xs pr = pr
 starOptSound (Star x) xs pr = pr
-starOptSound (Comp x) xs pr = pr
 
 starOptComplete : (l : RegExp) ->
                   (xs : List Char) ->
@@ -314,4 +201,3 @@ starOptComplete (Chr x) xs pr = pr
 starOptComplete (Cat x y) xs pr = pr
 starOptComplete (Alt x y) xs pr = pr
 starOptComplete (Star x) xs pr = pr
-starOptComplete (Comp x) xs pr = pr

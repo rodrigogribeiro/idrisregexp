@@ -7,6 +7,8 @@ import public Lightyear.Strings
 import RegExp
 import SmartCons
 
+%access public export
+
 pChar : Parser RegExp
 pChar = Chr <$> noneOf "[]()*+"
 
