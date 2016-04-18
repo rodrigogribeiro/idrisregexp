@@ -16,9 +16,9 @@ lemma_cons_inv Refl = (Refl , Refl)
 
 -- defining prefixes of a string
 
-data Prefix : (e : RegExp) -> (xs : List Char) -> Type where
-  MkPrefix : (ys : List Char)     ->
-             (zs : List Char)     ->
+data Prefix : (e : RegExp) -> (xs : List Nat) -> Type where
+  MkPrefix : (ys : List Nat)     ->
+             (zs : List Nat)     ->
              (eq : xs = ys ++ zs) ->
              (re : InRegExp ys e) ->
              Prefix e xs
@@ -36,7 +36,7 @@ noPrefixCons nnil nder (MkPrefix (y :: ys) zs eq re) with (lemma_cons_inv eq)
 
 -- prefix decidability
 
-prefixDec : (e : RegExp) -> (xs : List Char) -> Dec (Prefix e xs)
+prefixDec : (e : RegExp) -> (xs : List Nat) -> Dec (Prefix e xs)
 prefixDec e [] with (hasEmptyDec e)
   prefixDec e [] | (Yes prf) = Yes (MkPrefix [] [] Refl prf)
   prefixDec e [] | (No contra) = No (noPrefixNil contra)

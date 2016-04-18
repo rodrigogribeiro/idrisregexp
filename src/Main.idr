@@ -15,7 +15,7 @@ printUsage = putStrLn "Usage: igrep [REGEXP] [FILELIST]"
 
 
 search : RegExp -> String -> String
-search e s with (subStringDec e (unpack s))
+search e s with (subStringDec e (map toNat (unpack s)))
   search e s | Yes _ = s
   search e s | No _ = ""
 

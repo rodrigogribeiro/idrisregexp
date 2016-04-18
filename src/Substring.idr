@@ -9,10 +9,10 @@ import SmartCons
 %access public export
 
 
-data Substring : (e : RegExp) -> (xs : List Char) -> Type where
-  MkSubstring : (ys : List Char)           ->
-                (ts : List Char)           ->
-                (zs : List Char)           ->
+data Substring : (e : RegExp) -> (xs : List Nat) -> Type where
+  MkSubstring : (ys : List Nat)           ->
+                (ts : List Nat)           ->
+                (zs : List Nat)           ->
                 (eq : xs = ys ++ ts ++ zs) ->
                 (re : InRegExp ts e)       ->
                 Substring e xs
@@ -29,7 +29,7 @@ noSubstringCons  npre nsub (MkSubstring (y :: ys) ts zs eq re) with (lemma_cons_
   noSubstringCons  npre nsub (MkSubstring (y :: ys) ts zs eq re) | (Refl, Refl)
     = nsub (MkSubstring ys ts zs Refl re)
 
-subStringDec : (e : RegExp) -> (xs : List Char) -> Dec (Substring e xs)
+subStringDec : (e : RegExp) -> (xs : List Nat) -> Dec (Substring e xs)
 subStringDec e [] with (hasEmptyDec e)
   subStringDec e [] | (Yes prf) = Yes (MkSubstring [] [] [] Refl prf)
   subStringDec e [] | (No contra) = No (noSubstringNil (noPrefixNil contra))

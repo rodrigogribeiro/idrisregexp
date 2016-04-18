@@ -1,7 +1,7 @@
 default: all
 
 all: clean
-	idris -o igrep Main.idr -p effects -p lightyear --typeintype
+	idris -o igrep Main.idr -p effects -p lightyear
 
 clean:
 	-rm igrep

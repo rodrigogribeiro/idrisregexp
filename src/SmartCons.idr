@@ -35,7 +35,7 @@ star e = Star e
 
 altOptSound : (l : RegExp)     ->
               (r : RegExp)     ->
-              (xs : List Char) ->
+              (xs : List Nat) ->
               InRegExp xs (l .|. r) ->
               InRegExp xs (Alt l r)
 altOptSound Zero r xs pr = InAltR pr
@@ -72,7 +72,7 @@ altOptSound (Star x) (Star y) xs pr = pr
 
 altOptComplete : (l : RegExp)  ->
                  (r : RegExp)  ->
-                 (xs : List Char) ->
+                 (xs : List Nat) ->
                  InRegExp xs (Alt l r) ->
                  InRegExp xs (l .|. r)
 altOptComplete Zero r xs (InAltL x) = void (inZeroInv x)
@@ -115,7 +115,7 @@ altOptComplete (Star x) (Star y) xs pr = pr
 
 catOptSound : (l : RegExp) ->
               (r : RegExp) ->
-              (xs : List Char) ->
+              (xs : List Nat) ->
               InRegExp xs (l .@. r) ->
               InRegExp xs (Cat l r)
 catOptSound Zero r xs pr = void (inZeroInv pr)
@@ -148,7 +148,7 @@ catOptSound (Star x) (Star y) xs pr = pr
 
 catOptComplete : (l : RegExp) ->
                  (r : RegExp) ->
-                 (xs : List Char) ->
+                 (xs : List Nat) ->
                  InRegExp xs (Cat l r) ->
                  InRegExp xs (l .@. r)
 catOptComplete Zero r xs (InCat x y prf) = void (inZeroInv x)
@@ -179,7 +179,7 @@ catOptComplete (Star x) (Alt y z) xs pr = pr
 catOptComplete (Star x) (Star y) xs pr = pr
 
 starOptSound : (l : RegExp) ->
-               (xs : List Char) ->
+               (xs : List Nat) ->
                InRegExp xs (star l) ->
                InRegExp xs (Star l)
 starOptSound Zero xs pr = InStar (InAltL pr)
@@ -190,7 +190,7 @@ starOptSound (Alt x y) xs pr = pr
 starOptSound (Star x) xs pr = pr
 
 starOptComplete : (l : RegExp) ->
-                  (xs : List Char) ->
+                  (xs : List Nat) ->
                   InRegExp xs (Star l) ->
                   InRegExp xs (star l)
 starOptComplete Zero xs (InStar (InAltL x)) = x

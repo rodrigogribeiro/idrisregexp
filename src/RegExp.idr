@@ -6,12 +6,12 @@ module RegExp
 data RegExp : Type where
   Zero : RegExp
   Eps  : RegExp
-  Chr  : Char -> RegExp
+  Chr  : Nat -> RegExp
   Cat  : RegExp -> RegExp -> RegExp
   Alt  : RegExp -> RegExp -> RegExp
   Star : RegExp -> RegExp
 
-data InRegExp : List Char -> RegExp -> Type where
+data InRegExp : List Nat -> RegExp -> Type where
   InEps : InRegExp [] Eps
   InChr : InRegExp [ a ] (Chr a)
   InCat : InRegExp xs l ->
@@ -31,8 +31,14 @@ inZeroInv InEps impossible
 inEpsInv : InRegExp xs Eps -> xs = []
 inEpsInv InEps = Refl
 
+inEpsCons : InRegExp (x :: xs) Eps -> Void
+inEpsCons InEps impossible
+
 inChrNil : InRegExp [] (Chr c) -> Void
 inChrNil InEps impossible
+
+inChrDif : Not (c = x) -> InRegExp (x :: xs) (Chr c) -> Void
+inChrDif ncx InChr = ncx Refl
 
 concatNil : Prelude.List.Nil = (xs ++ ys) -> (xs = Prelude.List.Nil , ys = Prelude.List.Nil)
 concatNil {xs = []}{ys = []} p = (Refl, Refl)

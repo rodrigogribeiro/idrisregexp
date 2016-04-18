@@ -9,8 +9,13 @@ import SmartCons
 
 %access public export
 
+toNat' : Char -> Nat
+toNat' = fromInt . ord
+        where
+           fromInt n = if n <= 0 then 0 else S (fromInt (n - 1))
+
 pChar : Parser RegExp
-pChar = Chr <$> noneOf "[]()*+"
+pChar = (Chr . toNat)  <$> noneOf "[]()*+"
 
 pAtom : Parser RegExp
 pAtom = foldl1 (.@.) <$> some pChar
@@ -22,7 +27,7 @@ pPlus : Parser (RegExp -> RegExp)
 pPlus = const (\e => Cat e (star e)) <$> lexeme (char '+')
 
 pInBracketsChar : Parser RegExp
-pInBracketsChar = Chr <$> noneOf "[]^"
+pInBracketsChar = (Chr . toNat) <$> noneOf "[]^"
 
 pBrackets : Parser RegExp
 pBrackets = foldl Alt Zero <$> (brackets (many pInBracketsChar))
