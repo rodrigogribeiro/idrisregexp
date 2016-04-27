@@ -1,5 +1,6 @@
 module Search
 
+import Data.Fin
 import RegExp
 import SmartCons
 

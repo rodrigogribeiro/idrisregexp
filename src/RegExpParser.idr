@@ -9,11 +9,6 @@ import SmartCons
 
 %access public export
 
-toNat' : Char -> Nat
-toNat' = fromInt . ord
-        where
-           fromInt n = if n <= 0 then 0 else S (fromInt (n - 1))
-
 pChar : Parser RegExp
 pChar = (Chr . toNat)  <$> noneOf "[]()*+"
 

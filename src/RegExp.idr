@@ -7,9 +7,9 @@ data RegExp : Type where
   Zero : RegExp
   Eps  : RegExp
   Chr  : Nat -> RegExp
-  Cat  : RegExp -> RegExp -> RegExp
-  Alt  : RegExp -> RegExp -> RegExp
-  Star : RegExp -> RegExp
+  Cat  : RegExp -> RegExp -> RegExp 
+  Alt  : RegExp -> RegExp -> RegExp 
+  Star : RegExp -> RegExp 
 
 data InRegExp : List Nat -> RegExp -> Type where
   InEps : InRegExp [] Eps
@@ -36,9 +36,6 @@ inEpsCons InEps impossible
 
 inChrNil : InRegExp [] (Chr c) -> Void
 inChrNil InEps impossible
-
-inChrDif : Not (c = x) -> InRegExp (x :: xs) (Chr c) -> Void
-inChrDif ncx InChr = ncx Refl
 
 concatNil : Prelude.List.Nil = (xs ++ ys) -> (xs = Prelude.List.Nil , ys = Prelude.List.Nil)
 concatNil {xs = []}{ys = []} p = (Refl, Refl)

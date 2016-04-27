@@ -1,8 +1,9 @@
 module SmartCons
 
+import Data.Fin
 import RegExp
-%access public export
 
+%access public export
 %default total
 
 appendNilR : (xs : List a) -> xs = xs ++ []
